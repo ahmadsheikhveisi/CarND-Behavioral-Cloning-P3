@@ -30,9 +30,9 @@ def get_samples():
         with open(data_dir + 'driving_log.csv') as csvfile:
             reader = csv.DictReader(csvfile)
             for line in reader:
-                line['center'] = data_dir + line['center']
-                line['left'] = data_dir + line['left']
-                line['right'] = data_dir + line['right']
+                line['center'] = data_dir + line['center'].strip()
+                line['left'] = data_dir + line['left'].strip()
+                line['right'] = data_dir + line['right'].strip()
                 smpls.append(line)
     return smpls
 
@@ -45,12 +45,13 @@ def generator(samples, batch_size=32):
 
             images = []
             angles = []
-            for batch_sample in batch_samples:
-                name = batch_sample['center']
-                center_image = plt.imread(name)
-                center_angle = float(batch_sample['steering'])
-                images.append(center_image)
-                angles.append(center_angle)
+            for batch_sample in batch_samples:      
+                images.append(plt.imread(batch_sample['center']))
+                angles.append(float(batch_sample['steering']))
+                images.append(plt.imread(batch_sample['left']))
+                angles.append(float(batch_sample['steering'])+0.2)
+                images.append(plt.imread(batch_sample['right']))
+                angles.append(float(batch_sample['steering'])-0.2)
 
             X_train = np.array(images)
             y_train = np.array(angles)
@@ -69,22 +70,22 @@ def create_model():
     mdl.add(Cropping2D(cropping=((60,25), (0,0)), input_shape=(160,320,3)))
     mdl.add(Lambda(lambda x: (x-128.0)/128.0))
     mdl.add(Conv2D(24,5,strides=(2, 2),activation='elu',padding='valid'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.5))
     mdl.add(Conv2D(36,5,strides=(2, 2),activation='elu',padding='valid'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.5))
     mdl.add(Conv2D(48,5,strides=(2, 2),activation='elu',padding='valid'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.5))
     mdl.add(Conv2D(64,3,strides=(1, 1),activation='elu',padding='valid'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.5))
     mdl.add(Conv2D(64,3,strides=(1, 1),activation='elu',padding='valid'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.5))
     mdl.add(Flatten())
     mdl.add(Dense(100,activation='elu'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.3))
     mdl.add(Dense(50,activation='elu'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.2))
     mdl.add(Dense(10,activation='elu'))
-    #mdl.add(Dropout(0.5))
+    mdl.add(Dropout(0.1))
     mdl.add(Dense(1))
     optmzr = Adam(lr=LEARNING_RATE) 
     mdl.compile(optimizer=optmzr, loss='mean_squared_error', metrics=['accuracy'])
