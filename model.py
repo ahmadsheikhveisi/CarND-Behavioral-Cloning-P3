@@ -20,7 +20,7 @@ from sklearn.utils import shuffle
 
 
 BATCH_SIZE = 32
-EPOCHS = 30
+EPOCHS = 50
 LEARNING_RATE = 0.0001
 data_dir_arr = ['/opt/carnd_p3/data/']
 
@@ -48,6 +48,10 @@ def generator(samples, batch_size=32):
             for batch_sample in batch_samples:      
                 images.append(plt.imread(batch_sample['center']))
                 angles.append(float(batch_sample['steering']))
+                
+                images.append(np.fliplr(plt.imread(batch_sample['center'])))
+                angles.append(-1*float(batch_sample['steering']))
+                
                 images.append(plt.imread(batch_sample['left']))
                 angles.append(float(batch_sample['steering'])+0.2)
                 images.append(plt.imread(batch_sample['right']))
@@ -95,7 +99,7 @@ def create_model():
 model = create_model()
 model.summary()
 
-checkpoint = ModelCheckpoint(filepath='./check_model.h5', monitor='val_loss', save_best_only=True)
+checkpoint = ModelCheckpoint(filepath='./model.h5', monitor='val_loss', save_best_only=True)
 stopper = EarlyStopping(monitor='val_loss', min_delta=0.0003, patience=10)
 
 hist = model.fit_generator(train_generator, 
@@ -103,4 +107,14 @@ hist = model.fit_generator(train_generator,
             validation_data=validation_generator, 
             validation_steps=np.ceil(len(validation_samples)/BATCH_SIZE), 
             epochs=EPOCHS, verbose=1,callbacks=[checkpoint,stopper])
-model.save('model.h5')
+#model.save('model.h5')
+### plot the training and validation loss for each epoch
+plt.figure()
+plt.plot(hist.history['loss'])
+plt.plot(hist.history['val_loss'])
+plt.title('model mean squared error loss')
+plt.ylabel('mean squared error loss')
+plt.xlabel('epoch')
+plt.legend(['training set', 'validation set'], loc='upper right')
+fig.tight_layout()
+fig.savefig("loss.png")
