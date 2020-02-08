@@ -22,7 +22,7 @@ from sklearn.utils import shuffle
 BATCH_SIZE = 32
 EPOCHS = 50
 LEARNING_RATE = 0.0001
-data_dir_arr = ['/opt/carnd_p3/data/']
+data_dir_arr = ['/opt/carnd_p3/data/','/opt/carnd_p3/Track1_reverse/']
 
 def get_samples():
     smpls = []
@@ -109,7 +109,7 @@ hist = model.fit_generator(train_generator,
             epochs=EPOCHS, verbose=1,callbacks=[checkpoint,stopper])
 #model.save('model.h5')
 ### plot the training and validation loss for each epoch
-plt.figure()
+fig = plt.figure()
 plt.plot(hist.history['loss'])
 plt.plot(hist.history['val_loss'])
 plt.title('model mean squared error loss')
