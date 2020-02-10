@@ -18,12 +18,16 @@ import sklearn
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
-
-BATCH_SIZE = 32
-EPOCHS = 50
+#Hyperparameters
+LOAD_WAIGHTS =  True #load the weights from h5 file
+TRAIN = True #enable the training
+BATCH_SIZE = 32 #training and validation batch size
+EPOCHS = 50 #number of epochs
 LEARNING_RATE = 0.0001
-data_dir_arr = ['/opt/carnd_p3/data/','/opt/carnd_p3/Track1_reverse/']
+#list of directories containing the data sets
+data_dir_arr = ['/opt/carnd_p3/data/','/opt/carnd_p3/Track1_reverse/','/opt/carnd_p3/Curve1/']
 
+#reading the csv file containing steering angle and address of the images
 def get_samples():
     smpls = []
     for data_dir in data_dir_arr:
@@ -36,6 +40,7 @@ def get_samples():
                 smpls.append(line)
     return smpls
 
+#generator to get the batches 
 def generator(samples, batch_size=32):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
@@ -45,13 +50,14 @@ def generator(samples, batch_size=32):
 
             images = []
             angles = []
-            for batch_sample in batch_samples:      
+            for batch_sample in batch_samples:    
+                #getting the center camera image and steering angle
                 images.append(plt.imread(batch_sample['center']))
                 angles.append(float(batch_sample['steering']))
-                
+                #flipping the center image
                 images.append(np.fliplr(plt.imread(batch_sample['center'])))
                 angles.append(-1*float(batch_sample['steering']))
-                
+                #left and right images with the correction
                 images.append(plt.imread(batch_sample['left']))
                 angles.append(float(batch_sample['steering'])+0.2)
                 images.append(plt.imread(batch_sample['right']))
@@ -68,7 +74,8 @@ train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 # compile and train the model using the generator function
 train_generator = generator(train_samples, batch_size=BATCH_SIZE)
 validation_generator = generator(validation_samples, batch_size=BATCH_SIZE)
-            
+
+#covnet model
 def create_model():
     mdl = Sequential()
     mdl.add(Cropping2D(cropping=((60,25), (0,0)), input_shape=(160,320,3)))
@@ -99,15 +106,25 @@ def create_model():
 model = create_model()
 model.summary()
 
-checkpoint = ModelCheckpoint(filepath='./model.h5', monitor='val_loss', save_best_only=True)
-stopper = EarlyStopping(monitor='val_loss', min_delta=0.0003, patience=10)
+if LOAD_WAIGHTS is True:
+    model.load_weights("./model.h5")
 
-hist = model.fit_generator(train_generator, 
-            steps_per_epoch=np.ceil(len(train_samples)/BATCH_SIZE), 
-            validation_data=validation_generator, 
-            validation_steps=np.ceil(len(validation_samples)/BATCH_SIZE), 
-            epochs=EPOCHS, verbose=1,callbacks=[checkpoint,stopper])
-#model.save('model.h5')
+if TRAIN is True:
+    #stopper and checkpoint
+    checkpoint = ModelCheckpoint(filepath='./model.h5', monitor='val_loss', save_best_only=True)
+    stopper = EarlyStopping(monitor='val_loss', min_delta=0.0003, patience=10)
+    
+    #training the model
+    hist = model.fit_generator(train_generator, 
+                                           steps_per_epoch=np.ceil(len(train_samples)/BATCH_SIZE), 
+                                           validation_data=validation_generator, 
+                                           validation_steps=np.ceil(len(validation_samples)/BATCH_SIZE), 
+                                           epochs=EPOCHS, verbose=1,callbacks=[checkpoint,stopper])
+    #model.save('model.h5') #best model is saved by the checkpoint no need to save it here
+    with open("./history.pickle","wb") as picklehist:
+        pickle.dump(hist,picklehist)
+    
+hist = pickle.load(open('./history.pickle','rb'))    
 ### plot the training and validation loss for each epoch
 fig = plt.figure()
 plt.plot(hist.history['loss'])
@@ -118,3 +135,4 @@ plt.xlabel('epoch')
 plt.legend(['training set', 'validation set'], loc='upper right')
 fig.tight_layout()
 fig.savefig("loss.png")
+    
