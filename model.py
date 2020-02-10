@@ -19,25 +19,30 @@ import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
 #Hyperparameters
-LOAD_WAIGHTS =  True #load the weights from h5 file
+LOAD_WAIGHTS =  False #load the weights from h5 file
 TRAIN = True #enable the training
 BATCH_SIZE = 32 #training and validation batch size
 EPOCHS = 50 #number of epochs
 LEARNING_RATE = 0.0001
 #list of directories containing the data sets
-data_dir_arr = ['/opt/carnd_p3/data/','/opt/carnd_p3/Track1_reverse/','/opt/carnd_p3/Curve1/']
+data_dir_arr = ['/opt/carnd_p3/data/','/opt/carnd_p3/Track1/',
+                '/opt/carnd_p3/Track1_reverse/','/opt/carnd_p3/Curve1/',
+               '/opt/carnd_p3/Curve2/']
 
 #reading the csv file containing steering angle and address of the images
 def get_samples():
     smpls = []
-    for data_dir in data_dir_arr:
-        with open(data_dir + 'driving_log.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for line in reader:
-                line['center'] = data_dir + line['center'].strip()
-                line['left'] = data_dir + line['left'].strip()
-                line['right'] = data_dir + line['right'].strip()
-                smpls.append(line)
+    for data_dir in data_dir_arr:        
+        try:
+            with open(data_dir + 'driving_log.csv') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for line in reader:
+                    line['center'] = data_dir + line['center'].strip()
+                    line['left'] = data_dir + line['left'].strip()
+                    line['right'] = data_dir + line['right'].strip()
+                    smpls.append(line)
+        except:
+            pass
     return smpls
 
 #generator to get the batches 
@@ -68,6 +73,10 @@ def generator(samples, batch_size=32):
             yield sklearn.utils.shuffle(X_train, y_train)
 
 samples = get_samples()
+
+if len(samples) == 0:
+    print("No Samples is found. use ./getdata.sh")
+    exit()
 
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 

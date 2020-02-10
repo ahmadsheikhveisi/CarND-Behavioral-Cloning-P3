@@ -15,3 +15,4 @@ unzip $FILENAME -d /opt/carnd_p3
 get_data '1sqvtFK9NtMRFoMZDNscLbGWwT8QH0wHF' '/opt/carnd_p3/Track1.zip'
 get_data '1xOG1t-umD-MuqVNe4TBTFkv0Oe2Kd0Eb' '/opt/carnd_p3/Track1_reverse.zip'
 get_data '1mAlDGBtx4fy4bttdg-6BMRy5MpHGVoZt' '/opt/carnd_p3/Curve1.zip'
+get_data '1srK2PiuwagFsVCbGkT-4wPPmPUTTJcbb' '/opt/carnd_p3/Curve2.zip'
